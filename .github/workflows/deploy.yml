@@ -1,9 +1,3 @@
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [ "main" ] # Tự động chạy khi anh push code vào nhánh main
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -12,32 +6,36 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # --- BƯỚC MỚI THÊM: CÀI ĐẶT JAVA VÀ BUILD FILE .JAR ---
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: |
+        cd backend
+        mvn clean package -DskipTests
+    # -----------------------------------------------------
+
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    # 1. Tự động Build và Push Backend
     - name: Build and push Backend
       uses: docker/build-push-action@v5
       with:
         context: ./backend
         push: true
-        tags: tuananh0908/backend:latest
+        tags: tuananh0908123/backend:latest # Thay bằng username của anh
 
-    # 2. Tự động Build và Push Frontend
     - name: Build and push Frontend
       uses: docker/build-push-action@v5
       with:
         context: ./frontend
         push: true
-        tags: tuananh0908/frontend:latest
-
-    # 3. Ra lệnh cho K8s cập nhật (Nếu anh dùng K8s trên Cloud)
-    # Lưu ý: Nếu chạy K8s dưới máy (Local), bước này chỉ cập nhật file YAML trên GitHub.
-    # Anh vẫn cần gõ 'kubectl apply -f k8s/' dưới máy để kéo hàng mới về.
-    - name: Update K8s manifests
-      run: |
-        kubectl patch deployment spring-backend -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"build_time\":\"$(date)\"}}}}}"
-        kubectl patch deployment react-frontend -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"build_time\":\"$(date)\"}}}}}"
+        tags: tuananh0908123/frontend:latest # Thay bằng username của anh
