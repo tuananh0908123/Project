@@ -1,12 +1,20 @@
+name: CI/CD Pipeline
+
+# 1. Định nghĩa sự kiện kích hoạt (Trigger)
+on:
+  push:
+    branches: [ "main" ] # Sẽ tự chạy khi anh push code lên nhánh main
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+    # Bước 1: Lấy code từ GitHub về máy ảo
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # --- BƯỚC MỚI THÊM: CÀI ĐẶT JAVA VÀ BUILD FILE .JAR ---
+    # Bước 2: Cài đặt Java JDK 17 để build Backend
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -14,28 +22,33 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Build with Maven
+    # Bước 3: Chạy Maven để tạo file .jar (tạo ra thư mục target)
+    - name: Build Backend with Maven
       run: |
         cd backend
         mvn clean package -DskipTests
-    # -----------------------------------------------------
 
+    # Bước 4: Đăng nhập vào Docker Hub bằng Secret đã cài ở Settings
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push Backend
+    # Bước 5: Build Docker Image cho Backend và đẩy lên Hub
+    - name: Build and push Backend Image
       uses: docker/build-push-action@v5
       with:
         context: ./backend
         push: true
-        tags: tuananh0908123/backend:latest # Thay bằng username của anh
+        # THAY 'tuananh0908123' thành username Docker Hub của anh nếu khác
+        tags: tuananh0908123/backend:latest 
 
-    - name: Build and push Frontend
+    # Bước 6: Build Docker Image cho Frontend và đẩy lên Hub
+    - name: Build and push Frontend Image
       uses: docker/build-push-action@v5
       with:
         context: ./frontend
         push: true
-        tags: tuananh0908123/frontend:latest # Thay bằng username của anh
+        # THAY 'tuananh0908123' thành username Docker Hub của anh nếu khác
+        tags: tuananh0908123/frontend:latest
