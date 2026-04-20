@@ -42,7 +42,7 @@ jobs:
         context: ./backend
         push: true
         # THAY 'tuananh0908123' thành username Docker Hub của anh nếu khác
-        tags: tuananh0908123/backend:latest 
+        tags: tuananh0908/backend:latest 
 
     # Bước 6: Build Docker Image cho Frontend và đẩy lên Hub
     - name: Build and push Frontend Image
@@ -51,4 +51,4 @@ jobs:
         context: ./frontend
         push: true
         # THAY 'tuananh0908123' thành username Docker Hub của anh nếu khác
-        tags: tuananh0908123/frontend:latest
+        tags: tuananh0908/frontend:latest
