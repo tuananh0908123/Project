@@ -24,7 +24,7 @@ jobs:
       with:
         context: ./backend
         push: true
-        tags: <username_cua_anh>/backend:latest
+        tags: tuananh0908/backend:latest
 
     # 2. Tự động Build và Push Frontend
     - name: Build and push Frontend
@@ -32,7 +32,7 @@ jobs:
       with:
         context: ./frontend
         push: true
-        tags: <username_cua_anh>/frontend:latest
+        tags: tuananh0908/frontend:latest
 
     # 3. Ra lệnh cho K8s cập nhật (Nếu anh dùng K8s trên Cloud)
     # Lưu ý: Nếu chạy K8s dưới máy (Local), bước này chỉ cập nhật file YAML trên GitHub.
