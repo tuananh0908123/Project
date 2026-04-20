@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: spring-app
-        image: tuananh0908/backend:latest # Thay bằng image của anh
+        image: tuananh0908/backend:latest 
         ports:
         - containerPort: 8080
         resources:
