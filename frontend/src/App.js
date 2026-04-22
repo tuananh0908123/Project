@@ -10,7 +10,7 @@ function App() {
     const fetchData = async () => {
       try {
         const data = await apiClient.get('/api/hello');
-        setMessage(data);
+        setMessage(data.message);
       } catch (err) {
         setError('Failed to connect to API');
         console.error('API Error:', err);
