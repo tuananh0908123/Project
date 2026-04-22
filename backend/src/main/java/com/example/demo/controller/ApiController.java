@@ -5,17 +5,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
 public class ApiController {
 
     @GetMapping("/hello")
-    public ResponseEntity<String> hello() {
-        return ResponseEntity.ok("Hello from Spring Boot API!");
+    public ResponseEntity<?> hello() {
+        return ResponseEntity.ok(Map.of("message", "Hello from Spring Boot API!"));
     }
 
     @GetMapping("/health")
-    public ResponseEntity<String> health() {
-        return ResponseEntity.ok("Service is healthy");
+    public ResponseEntity<?> health() {
+        return ResponseEntity.ok(Map.of("status", "Service is healthy"));
     }
 }
