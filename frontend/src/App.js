@@ -1,22 +1,31 @@
-import logo from './logo.svg';
+import { useState, useEffect } from 'react';
+import { apiClient } from './api/client';
 import './App.css';
 
 function App() {
+  const [message, setMessage] = useState('Loading...');
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await apiClient.get('/api/hello');
+        setMessage(data.message);
+      } catch (err) {
+        setError('Failed to connect to API');
+        console.error('API Error:', err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>Full-Stack App</h1>
+        <p>API Response: {error ? error : message}</p>
+        <p>Environment: {process.env.NODE_ENV}</p>
       </header>
     </div>
   );
