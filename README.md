@@ -10,9 +10,9 @@ Dự án này là một ứng dụng full-stack với backend Spring Boot và fr
 
 ## Yêu Cầu Tiên Quyết
 
-- Java 17 (để chạy backend) - Tải từ https://adoptium.net/
-- Node.js 18 (để chạy frontend) - Tải từ https://nodejs.org/
-- Maven 3.9+ (để build backend) - Tải từ https://maven.apache.org/
+- Java 17 (để chạy backend) - Tải từ <https://adoptium.net/>
+- Node.js 18 (để chạy frontend) - Tải từ <https://nodejs.org/>
+- Maven 3.9+ (để build backend) - Tải từ <https://maven.apache.org/>
 - Git (để clone repository)
 
 ## Cách Chạy Ứng Dụng
@@ -22,12 +22,14 @@ Dự án này là một ứng dụng full-stack với backend Spring Boot và fr
 Trước tiên, cài đặt các công cụ cần thiết:
 
 #### Windows
-- **Java 17**: Tải từ https://adoptium.net/ và thêm vào PATH
-- **Node.js 18**: Tải từ https://nodejs.org/ và thêm vào PATH
-- **Maven**: Tải từ https://maven.apache.org/ và thêm vào PATH
-- **Git**: Tải từ https://git-scm.com/
+
+- **Java 17**: Tải từ <https://adoptium.net/> và thêm vào PATH
+- **Node.js 18**: Tải từ <https://nodejs.org/> và thêm vào PATH
+- **Maven**: Tải từ <https://maven.apache.org/> và thêm vào PATH
+- **Git**: Tải từ <https://git-scm.com/>
 
 #### Linux/Ubuntu
+
 ```bash
 # Java 17
 sudo apt update
@@ -47,26 +49,31 @@ sudo apt install git
 ### 2. Chạy Cục Bộ (Development)
 
 1. Clone repository:
+
    ```bash
    git clone <repository-url>
    cd project
    ```
 
 2. Chạy backend:
+
    ```bash
    cd backend
    ./mvnw spring-boot:run
    ```
-   - Backend chạy trên: http://localhost:8080
-   - API docs: http://localhost:8080/swagger-ui.html (sau khi thêm Swagger)
+
+   - Backend chạy trên: <http://localhost:8080>
+   - API docs: <http://localhost:8080/swagger-ui.html> (sau khi thêm Swagger)
 
 3. Chạy frontend (trong terminal khác):
+
    ```bash
    cd frontend
    npm install
    npm start
    ```
-   - Frontend chạy trên: http://localhost:3000
+
+   - Frontend chạy trên: <http://localhost:3000>
    - Tự động reload khi thay đổi code
 
 ### 3. Chạy Production Trên Host
@@ -75,12 +82,14 @@ sudo apt install git
 
 1. Cài đặt Java, Node.js, Maven như trên
 2. Cài đặt Nginx:
+
    ```bash
    sudo apt update
    sudo apt install nginx
    ```
 
 3. Tạo thư mục:
+
    ```bash
    sudo mkdir -p /opt/backend
    sudo mkdir -p /var/www/html
@@ -91,24 +100,28 @@ sudo apt install git
 #### Deploy Thủ Công
 
 1. Build backend:
+
    ```bash
    cd backend
    ./mvnw clean package -DskipTests
    ```
 
 2. Build frontend:
+
    ```bash
    cd frontend
    npm run build
    ```
 
 3. Copy files lên server (hoặc build trực tiếp trên server):
+
    ```bash
    scp backend/target/demo-0.0.1-SNAPSHOT.jar user@server:/opt/backend/
    scp -r frontend/build/* user@server:/var/www/html/
    ```
 
 4. Chạy backend:
+
    ```bash
    ssh user@server
    cd /opt/backend
@@ -116,6 +129,7 @@ sudo apt install git
    ```
 
 5. Cấu hình Nginx (file `/etc/nginx/sites-available/default`):
+
    ```
    server {
        listen 80;
@@ -134,6 +148,7 @@ sudo apt install git
    ```
 
 6. Restart Nginx:
+
    ```bash
    sudo systemctl restart nginx
    ```
@@ -155,6 +170,7 @@ Script sẽ build, copy files, restart services và health check.
 ## Build Cho Production
 
 ### Backend
+
 ```bash
 cd backend
 ./mvnw clean package -DskipTests
@@ -162,33 +178,40 @@ java -jar target/demo-0.0.1-SNAPSHOT.jar
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm run build
 ```
+
 Sau đó, phục vụ thư mục `build` bằng web server như Nginx hoặc Apache.
 
 ## Triển Khai Trên Host
 
 ### Backend
+
 1. Build JAR:
+
    ```bash
    cd backend
    ./mvnw clean package -DskipTests
    ```
 
 2. Chạy JAR:
+
    ```bash
    java -jar target/demo-0.0.1-SNAPSHOT.jar
    ```
 
 3. Để chạy nền (background):
+
    ```bash
    nohup java -jar target/demo-0.0.1-SNAPSHOT.jar &
    ```
 
 4. Tạo systemd service (Linux):
    Tạo file `/etc/systemd/system/backend.service`:
+
    ```
    [Unit]
    Description=Spring Boot Backend
@@ -204,7 +227,9 @@ Sau đó, phục vụ thư mục `build` bằng web server như Nginx hoặc Apa
    [Install]
    WantedBy=multi-user.target
    ```
+
    Sau đó:
+
    ```bash
    sudo systemctl daemon-reload
    sudo systemctl enable backend
@@ -212,7 +237,9 @@ Sau đó, phục vụ thư mục `build` bằng web server như Nginx hoặc Apa
    ```
 
 ### Frontend
+
 1. Build production:
+
    ```bash
    cd frontend
    npm run build
@@ -223,6 +250,7 @@ Sau đó, phục vụ thư mục `build` bằng web server như Nginx hoặc Apa
    - Cấu hình Nginx để phục vụ trên port 80
 
 Ví dụ cấu hình Nginx:
+
 ```
 server {
     listen 80;
@@ -236,7 +264,8 @@ server {
 }
 ```
 
-3. Restart Nginx:
+1. Restart Nginx:
+
    ```bash
    sudo systemctl restart nginx
    ```
@@ -250,51 +279,22 @@ server {
 
 ### Thiết Lập Pipeline
 
-#### 1. Chuẩn Bị Servers
+#### 📖 Hướng Dẫn Setup Server
 
-**Staging Server**:
-```bash
-# Tạo thư mục riêng cho staging
-sudo mkdir -p /opt/staging/backend
-sudo mkdir -p /var/www/staging
-sudo chown -R $USER:$USER /opt/staging
-sudo chown -R $USER:$USER /var/www/staging
+**Chi tiết đầy đủ xem tại**: [SERVER_SETUP_GUIDE.md](SERVER_SETUP_GUIDE.md)
 
-# Cấu hình Nginx cho staging (port 8081)
-sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/staging
-# Edit file staging với port 8081 và root /var/www/staging
-sudo ln -s /etc/nginx/sites-available/staging /etc/nginx/sites-enabled/
-sudo systemctl restart nginx
-```
-
-**Production Server**:
-```bash
-sudo mkdir -p /opt/backend
-sudo mkdir -p /var/www/html
-sudo chown -R $USER:$USER /opt/backend
-sudo chown -R $USER:$USER /var/www/html
-```
-
-#### 2. Tạo SSH Keys
-
-```bash
-# Trên local machine
-ssh-keygen -t rsa -b 4096 -C "github-actions"
-# Copy public key lên servers
-ssh-copy-id user@staging-server
-ssh-copy-id user@production-server
-```
-
-#### 3. Thêm GitHub Secrets
+Hoặc chạy script tự động:
 
 Trong repository GitHub > Settings > Secrets and variables > Actions:
 
 **Staging**:
+
 - `STAGING_HOST_IP`: IP của staging server
 - `STAGING_SSH_USER`: SSH username
 - `STAGING_SSH_PRIVATE_KEY`: Private key content
 
 **Production**:
+
 - `PROD_HOST_IP`: IP của production server
 - `PROD_SSH_USER`: SSH username
 - `PROD_SSH_PRIVATE_KEY`: Private key content
@@ -310,13 +310,14 @@ Trong repository GitHub > Settings > Environments:
 
 1. **Develop feature** trên branch feature
 2. **Merge vào `develop`** → Tự động deploy staging
-3. **Test trên staging** (http://staging-server:8081)
+3. **Test trên staging** (<http://staging-server:8081>)
 4. **Merge `develop` vào `main`** → Tự động deploy production
-5. **Monitor production** (http://production-server)
+5. **Monitor production** (<http://production-server>)
 
 ### Rollback
 
 Nếu production có lỗi:
+
 ```bash
 # Revert commit trên GitHub
 git revert <commit-hash>
@@ -327,6 +328,7 @@ git push origin main
 ### Monitoring
 
 Sau deploy, pipeline kiểm tra health check. Để monitor thêm:
+
 - Logs backend: `journalctl -u backend -f`
 - Logs Nginx: `tail -f /var/log/nginx/access.log`
 - System resources: `htop` hoặc `top`
@@ -336,6 +338,7 @@ Sau deploy, pipeline kiểm tra health check. Để monitor thêm:
 ### API Endpoints
 
 Backend hiện tại là ứng dụng cơ bản Spring Boot. Bạn cần thêm REST controllers để có endpoints thực tế. Ví dụ:
+
 - GET / - Trang chủ Spring Boot mặc định
 
 ### Frontend
@@ -362,6 +365,7 @@ Pipeline này tuân thủ các chuẩn DevOps:
 - **Branching Strategy**: GitFlow với develop/main branches
 
 Để cải thiện thêm:
+
 - Thêm database migration scripts
 - Thêm monitoring với Prometheus/Grafana
 - Thêm alerting với Slack/email
@@ -371,6 +375,7 @@ Pipeline này tuân thủ các chuẩn DevOps:
 Dự án hiện tại là skeleton cơ bản. Để hoàn thiện theo chuẩn DevOps, bạn cần:
 
 ### Backend
+
 - Thêm REST API endpoints thực tế
 - Cấu hình CORS cho frontend
 - Thêm logging và exception handling
@@ -382,6 +387,7 @@ Dự án hiện tại là skeleton cơ bản. Để hoàn thiện theo chuẩn D
 Dự án hiện tại là skeleton cơ bản. Để hoàn thiện theo chuẩn DevOps, bạn cần:
 
 ### Backend
+
 - Thêm REST API endpoints thực tế
 - Cấu hình CORS cho frontend
 - Thêm logging và exception handling
@@ -389,6 +395,7 @@ Dự án hiện tại là skeleton cơ bản. Để hoàn thiện theo chuẩn D
 - Thêm API documentation (Swagger)
 
 ### Frontend
+
 - Tùy chỉnh App.js với logic thực tế
 - Thêm API client để gọi backend
 - Thêm error handling và loading states
@@ -396,6 +403,7 @@ Dự án hiện tại là skeleton cơ bản. Để hoàn thiện theo chuẩn D
 - Thêm ESLint cho linting (để CI/CD pass)
 
 ### Triển Khai
+
 - Cài đặt Nginx và cấu hình reverse proxy
 - Thêm SSL/HTTPS
 - Setup staging và production servers
