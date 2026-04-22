@@ -6,16 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  # Các biến này anh khai báo trong Repository Secrets của GitHub nhé
-  STAGING_HOST: ${{ secrets.STAGING_HOST_IP }}
-  STAGING_USER: ${{ secrets.STAGING_SSH_USER }}
-  STAGING_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
-  
-  PROD_HOST: ${{ secrets.PROD_HOST_IP }}
-  PROD_USER: ${{ secrets.PROD_SSH_USER }}
-  PROD_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -49,8 +39,7 @@ jobs:
         run: |
           cd frontend
           npm ci
-          # Lưu ý: Sửa file test hoặc comment dòng dưới nếu test bị FAIL
-          # npm test -- --coverage --watchAll=false 
+          # npm test -- --coverage --watchAll=false  # Mở ra nếu anh đã fix xong App.test.js
           npm run build
 
       # --- LƯU TRỮ ARTIFACTS ---
@@ -66,20 +55,18 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
-    environment: staging
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      # Vận chuyển file sang thư mục tạm trên Server Staging
       - name: SCP Transfer to Staging
         uses: appleboy/scp-action@master
         with:
-          host: ${{ env.STAGING_HOST }}
-          username: ${{ env.STAGING_USER }}
-          key: ${{ env.STAGING_KEY }}
+          host: ${{ secrets.STAGING_HOST_IP }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           source: "backend/target/*.jar,frontend/build/*"
           target: "/tmp/staging_deploy"
           strip_components: 1
@@ -87,21 +74,22 @@ jobs:
       - name: Execute Deploy on Staging
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.STAGING_HOST }}
-          username: ${{ env.STAGING_USER }}
-          key: ${{ env.STAGING_KEY }}
+          host: ${{ secrets.STAGING_HOST_IP }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           script: |
             echo ">>> Deploying to STAGING..."
             # Cấu hình Backend
             sudo systemctl stop backend-staging || true
+            sudo mkdir -p /opt/staging/backend
             sudo cp /tmp/staging_deploy/target/*.jar /opt/staging/backend/app.jar
             sudo systemctl start backend-staging
 
-            # Cấu hình Frontend (Nginx)
+            # Cấu hình Frontend
+            sudo mkdir -p /var/www/staging
             sudo rm -rf /var/www/staging/*
-            sudo cp -r /tmp/staging_deploy/frontend/build/* /var/www/staging/
+            sudo cp -r /tmp/staging_deploy/build/* /var/www/staging/
             
-            # Dọn dẹp & Check
             rm -rf /tmp/staging_deploy
             echo "Staging deployment successful!"
 
@@ -109,20 +97,18 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    environment: production
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      # Vận chuyển file sang thư mục tạm trên Server Production
       - name: SCP Transfer to Production
         uses: appleboy/scp-action@master
         with:
-          host: ${{ env.PROD_HOST }}
-          username: ${{ env.PROD_USER }}
-          key: ${{ env.PROD_KEY }}
+          host: ${{ secrets.PROD_HOST_IP }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           source: "backend/target/*.jar,frontend/build/*"
           target: "/tmp/prod_deploy"
           strip_components: 1
@@ -130,21 +116,21 @@ jobs:
       - name: Execute Deploy on Production
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ env.PROD_HOST }}
-          username: ${{ env.PROD_USER }}
-          key: ${{ env.PROD_KEY }}
+          host: ${{ secrets.PROD_HOST_IP }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           script: |
             echo ">>> Deploying to PRODUCTION..."
+            sudo mkdir -p /opt/backend
             sudo cp /opt/backend/app.jar /opt/backend/app.jar.bak || true
 
             sudo systemctl stop backend || true
             sudo cp /tmp/prod_deploy/target/*.jar /opt/backend/app.jar
             sudo systemctl start backend
 
+            sudo mkdir -p /var/www/html
             sudo rm -rf /var/www/html/*
-            sudo cp -r /tmp/prod_deploy/frontend/build/* /var/www/html/
+            sudo cp -r /tmp/prod_deploy/build/* /var/www/html/
 
-      
             rm -rf /tmp/prod_deploy
             echo "Production deployment successful!"
-            
