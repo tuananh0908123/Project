@@ -1,0 +1,165 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  STAGING_HOST: ${{ secrets.STAGING_HOST_IP }}
+  STAGING_USER: ${{ secrets.STAGING_SSH_USER }}
+  STAGING_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+  PROD_HOST: ${{ secrets.PROD_HOST_IP }}
+  PROD_USER: ${{ secrets.PROD_SSH_USER }}
+  PROD_KEY: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        mvn dependency:go-offline
+
+    - name: Build and test backend
+      run: |
+        cd backend
+        mvn clean compile test
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Lint frontend
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test -- --coverage --watchAll=false
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Build backend JAR
+      run: |
+        cd backend
+        mvn clean package -DskipTests
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          backend/target/*.jar
+          frontend/build/
+
+  deploy-staging:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+
+    - name: Deploy to staging
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.STAGING_HOST }}
+        username: ${{ env.STAGING_USER }}
+        key: ${{ env.STAGING_KEY }}
+        script: |
+          echo "Deploying to STAGING environment"
+          # Stop services
+          sudo systemctl stop backend-staging || true
+          sudo systemctl stop nginx-staging || true
+
+          # Deploy backend
+          sudo cp demo-0.0.1-SNAPSHOT.jar /opt/staging/backend/
+          sudo systemctl start backend-staging
+
+          # Deploy frontend
+          sudo rm -rf /var/www/staging/*
+          sudo cp -r build/* /var/www/staging/
+          sudo systemctl start nginx-staging
+
+          # Health check
+          sleep 10
+          curl -f http://localhost:8081/ || exit 1
+          echo "Staging deployment successful"
+
+  deploy-production:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+
+    - name: Deploy to production
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ env.PROD_HOST }}
+        username: ${{ env.PROD_USER }}
+        key: ${{ env.PROD_KEY }}
+        script: |
+          echo "Deploying to PRODUCTION environment"
+          # Create backup
+          sudo cp /opt/backend/demo-0.0.1-SNAPSHOT.jar /opt/backend/backup.jar
+
+          # Stop services
+          sudo systemctl stop backend
+          sudo systemctl stop nginx
+
+          # Deploy backend
+          sudo cp demo-0.0.1-SNAPSHOT.jar /opt/backend/
+          sudo systemctl start backend
+
+          # Deploy frontend
+          sudo rm -rf /var/www/html/*
+          sudo cp -r build/* /var/www/html/
+          sudo systemctl start nginx
+
+          # Health check
+          sleep 10
+          curl -f http://localhost/ || exit 1
+          echo "Production deployment successful"
