@@ -127,17 +127,28 @@ jobs:
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           script: |
-            echo ">>> Deploying to PRODUCTION..."
+            echo ">>> Đang triển khai PRODUCTION..."
+            
+           
             sudo mkdir -p /opt/backend
-            sudo cp /opt/backend/app.jar /opt/backend/app.jar.bak || true
-
             sudo systemctl stop backend || true
-            sudo cp /tmp/prod_deploy/target/*.jar /opt/backend/app.jar
-            sudo systemctl start backend
-
+            
+            # 2. Tìm file jar bất kể nó nằm ở đâu trong folder tạm và đưa về /opt/backend
+            sudo find /tmp/prod_deploy -name "*.jar" -exec cp {} /opt/backend/app.jar \;
+            
+            # 3. Phân quyền
+            sudo chown -R $USER:$USER /opt/backend
+            sudo chmod +x /opt/backend/app.jar
+            
+            # 4. Cập nhật Frontend
             sudo mkdir -p /var/www/html
-            sudo rm -rf /var/www/html/*
-            sudo cp -r /tmp/prod_deploy/build/* /var/www/html/
-
-            rm -rf /tmp/prod_deploy
-            echo "Production deployment successful!"
+            sudo cp -r /tmp/prod_deploy/build/* /var/www/html/ || true
+            
+            # 5. Khởi động lại
+            sudo systemctl daemon-reload
+            sudo systemctl restart backend
+            
+            # 6. Dọn dẹp rác
+            sudo rm -rf /tmp/prod_deploy
+            echo ">>> Production deployment successful!"
+            ls -lh /opt/backend/app.jar
