@@ -78,21 +78,28 @@ jobs:
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           script: |
-            echo ">>> Deploying to STAGING..."
-            # Cấu hình Backend
+            echo ">>> Đang dọn dẹp và chuẩn bị môi trường..."
             sudo systemctl stop backend-staging || true
-            sudo mkdir -p /opt/staging/backend
-            sudo cp /tmp/staging_deploy/target/*.jar /opt/staging/backend/app.jar
-            sudo systemctl start backend-staging
-
-            # Cấu hình Frontend
-            sudo mkdir -p /var/www/staging
-            sudo rm -rf /var/www/staging/*
-            sudo cp -r /tmp/staging_deploy/build/* /var/www/staging/
             
-            rm -rf /tmp/staging_deploy
-            echo "Staging deployment successful!"
-
+            # 1. Đảm bảo thư mục đích tồn tại và sạch sẽ
+            sudo mkdir -p /opt/staging/backend
+            sudo rm -f /opt/staging/backend/app.jar
+            
+            # 2. TÌM file jar trong folder tạm (bất kể nó nằm sâu thế nào) và copy ra đổi tên
+            # Lệnh này sẽ tìm file .jar trong /tmp/staging_deploy và đưa về /opt/staging/backend/app.jar
+            sudo find /tmp/staging_deploy -name "*.jar" -exec cp {} /opt/staging/backend/app.jar \;
+            
+            # 3. Phân quyền cho user chạy được file
+            sudo chown -R $USER:$USER /opt/staging/backend
+            sudo chmod +x /opt/staging/backend/app.jar
+            
+            # 4. Khởi động lại dịch vụ
+            echo ">>> Đang khởi động Backend..."
+            sudo systemctl daemon-reload
+            sudo systemctl start backend-staging
+            
+            # 5. Kiểm tra nhanh xem file đã xuất hiện chưa
+            ls -lh /opt/staging/backend/app.jar
   deploy-production:
     needs: build-and-test
     runs-on: ubuntu-latest
