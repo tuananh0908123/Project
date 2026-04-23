@@ -1,169 +1,176 @@
-# Ứng Dụng Full-Stack
+# Full-Stack Application
 
-Dự án này là một ứng dụng full-stack với backend Spring Boot và frontend React, chạy trực tiếp trên host theo chuẩn DevOps.
+Dự án này là một ứng dụng full-stack với backend Spring Boot và frontend React, được thiết kế để chạy trực tiếp trên host theo chuẩn DevOps.
 
-## Kiến Trúc
+## 📋 Mục Lục
 
-- **Backend**: Ứng dụng Spring Boot (Java 17, Maven)
-- **Frontend**: Ứng dụng React (Node.js 18)
+- [Kiến Trúc](#kiến-trúc)
+- [Yêu Cầu Tiên Quyết](#yêu-cầu-tiên-quyết)
+- [Cài Đặt và Chạy](#cài-đặt-và-chạy)
+- [API Endpoints](#api-endpoints)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Cấu Trúc Project](#cấu-trúc-project)
+- [Đóng Góp](#đóng-góp)
+
+## 🏗️ Kiến Trúc
+
+- **Backend**: Spring Boot 3.2.5 (Java 17+, Maven)
+- **Frontend**: React 18+ (Node.js 18+)
+- **Database**: Không sử dụng (có thể thêm sau)
 - **CI/CD**: GitHub Actions (không dùng Docker)
+- **Deployment**: Direct host deployment với Nginx reverse proxy
 
-## Yêu Cầu Tiên Quyết
+## 📋 Yêu Cầu Tiên Quyết
 
-- Java 17 (để chạy backend) - Tải từ <https://adoptium.net/>
-- Node.js 18 (để chạy frontend) - Tải từ <https://nodejs.org/>
-- Maven 3.9+ (để build backend) - Tải từ <https://maven.apache.org/>
-- Git (để clone repository)
+- **Java 17+** - Tải từ [Adoptium](https://adoptium.net/)
+- **Node.js 18+** - Tải từ [Node.js](https://nodejs.org/)
+- **Maven 3.9+** - Tải từ [Maven](https://maven.apache.org/) (hoặc sử dụng Maven Wrapper)
+- **Git** - Tải từ [Git](https://git-scm.com/)
 
-## Cách Chạy Ứng Dụng
+## 🚀 Cài Đặt và Chạy
 
-### 1. Cài Đặt Môi Trường
-
-Trước tiên, cài đặt các công cụ cần thiết:
-
-#### Windows
-
-- **Java 17**: Tải từ <https://adoptium.net/> và thêm vào PATH
-- **Node.js 18**: Tải từ <https://nodejs.org/> và thêm vào PATH
-- **Maven**: Tải từ <https://maven.apache.org/> và thêm vào PATH
-- **Git**: Tải từ <https://git-scm.com/>
-
-#### Linux/Ubuntu
+### 1. Clone Repository
 
 ```bash
-# Java 17
-sudo apt update
-sudo apt install openjdk-17-jdk
-
-# Node.js 18
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Maven
-sudo apt install maven
-
-# Git
-sudo apt install git
+git clone <repository-url>
+cd project
 ```
 
-### 2. Chạy Cục Bộ (Development)
+### 2. Chạy Development Environment
 
-1. Clone repository:
+#### Backend
 
-   ```bash
-   git clone <repository-url>
-   cd project
-   ```
+```bash
+cd backend
+./mvnw spring-boot:run
+```
 
-2. Chạy backend:
+- Backend sẽ chạy trên: http://localhost:8080
+- API documentation: http://localhost:8080/swagger-ui.html (sau khi thêm Swagger)
 
-   ```bash
-   cd backend
-   ./mvnw spring-boot:run
-   ```
+#### Frontend
 
-   - Backend chạy trên: <http://localhost:8080>
-   - API docs: <http://localhost:8080/swagger-ui.html> (sau khi thêm Swagger)
+```bash
+cd frontend
+npm install
+npm start
+```
 
-3. Chạy frontend (trong terminal khác):
+- Frontend sẽ chạy trên: http://localhost:3000
+- Tự động reload khi thay đổi code
 
-   ```bash
-   cd frontend
-   npm install
-   npm start
-   ```
+### 3. Truy Cập Ứng Dụng
 
-   - Frontend chạy trên: <http://localhost:3000>
-   - Tự động reload khi thay đổi code
+Mở trình duyệt và truy cập:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080/api/hello
 
-### 3. Chạy Production Trên Host
+## 📡 API Endpoints
 
-#### Chuẩn Bị Server
+### Backend API
 
-1. Cài đặt Java, Node.js, Maven như trên
-2. Cài đặt Nginx:
+- `GET /api/hello` - Trả về thông điệp chào mừng
+- `GET /api/health` - Kiểm tra trạng thái service
 
-   ```bash
-   sudo apt update
-   sudo apt install nginx
-   ```
+### CORS Configuration
 
-3. Tạo thư mục:
+Backend được cấu hình để cho phép frontend truy cập từ:
+- http://localhost:3000 (development)
+- http://127.0.0.1:3000 (development)
 
-   ```bash
-   sudo mkdir -p /opt/backend
-   sudo mkdir -p /var/www/html
-   sudo chown -R $USER:$USER /opt/backend
-   sudo chown -R $USER:$USER /var/www/html
-   ```
+## 🧪 Testing
 
-#### Deploy Thủ Công
+### Backend Tests
 
-1. Build backend:
+```bash
+cd backend
+./mvnw test
+```
 
+### Frontend Tests
+
+```bash
+cd frontend
+npm test
+```
+
+## 🚢 Deployment
+
+### Development Deployment
+
+Sử dụng script `deploy.sh` để deploy lên server staging/production.
+
+```bash
+./deploy.sh
+```
+
+### Manual Deployment
+
+Xem chi tiết trong [SERVER_SETUP_GUIDE.md](SERVER_SETUP_GUIDE.md)
+
+#### Bước Cơ Bản:
+
+1. **Build Backend:**
    ```bash
    cd backend
    ./mvnw clean package -DskipTests
    ```
 
-2. Build frontend:
-
+2. **Build Frontend:**
    ```bash
    cd frontend
    npm run build
    ```
 
-3. Copy files lên server (hoặc build trực tiếp trên server):
+3. **Deploy lên Server:**
+   - Copy `backend/target/*.jar` lên server
+   - Copy `frontend/build/*` lên web server directory
+   - Chạy backend với `java -jar *.jar`
+   - Cấu hình Nginx reverse proxy
 
-   ```bash
-   scp backend/target/demo-0.0.1-SNAPSHOT.jar user@server:/opt/backend/
-   scp -r frontend/build/* user@server:/var/www/html/
-   ```
+## 📁 Cấu Trúc Project
 
-4. Chạy backend:
-
-   ```bash
-   ssh user@server
-   cd /opt/backend
-   java -jar demo-0.0.1-SNAPSHOT.jar
-   ```
-
-5. Cấu hình Nginx (file `/etc/nginx/sites-available/default`):
-
-   ```
-   server {
-       listen 80;
-       server_name your-domain.com;
-
-       location / {
-           proxy_pass http://localhost:8080;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-
-       location /api {
-           proxy_pass http://localhost:8080;
-       }
-   }
-   ```
-
-6. Restart Nginx:
-
-   ```bash
-   sudo systemctl restart nginx
-   ```
-
-#### Sử Dụng Script Deploy
-
-Project có script `deploy.sh` để deploy tự động:
-
-```bash
-# Deploy to staging
-./deploy.sh staging
-
-# Deploy to production
-./deploy.sh production
 ```
+project/
+├── backend/                    # Spring Boot application
+│   ├── src/
+│   │   ├── main/java/com/example/demo/
+│   │   │   ├── DemoApplication.java
+│   │   │   ├── config/CorsConfig.java
+│   │   │   └── controller/ApiController.java
+│   │   └── resources/application.properties
+│   ├── target/                 # Build output
+│   ├── pom.xml
+│   └── mvnw                    # Maven wrapper
+├── frontend/                   # React application
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── api/client.js
+│   │   └── ...
+│   ├── public/
+│   ├── package.json
+│   └── ...
+├── deploy.sh                   # Deployment script
+├── SERVER_SETUP_GUIDE.md       # Server setup guide
+└── README.md                   # This file
+```
+
+## 🤝 Đóng Góp
+
+1. Fork project
+2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📞 Liên Hệ
+
+Nếu có câu hỏi, vui lòng tạo issue trên GitHub.
 
 Script sẽ build, copy files, restart services và health check.
 
@@ -409,14 +416,3 @@ Dự án hiện tại là skeleton cơ bản. Để hoàn thiện theo chuẩn D
 - Setup staging và production servers
 - Thêm monitoring (Prometheus, Grafana)
 - Thêm log rotation
-
-## Đóng Góp
-
-1. Fork repository
-2. Tạo nhánh feature
-3. Thực hiện thay đổi và thêm tests
-4. Gửi pull request
-
-## Giấy Phép
-
-[Thêm giấy phép của bạn ở đây]
