@@ -92,7 +92,7 @@ jobs:
 
             # Health check thực sự
             sleep 15
-            curl -f http://localhost:8082/api/health || {
+            curl -f http://localhost:8080/api/health || {
               echo "Health check failed, rolling back..."
               cp /opt/staging/backend/app.jar.bak /opt/staging/backend/app.jar
               sudo systemctl restart backend-staging
