@@ -13,7 +13,7 @@ public class ApiController {
 
     @GetMapping("/hello")
     public ResponseEntity<?> hello() {
-        return ResponseEntity.ok(Map.of("message", "Hello from Spring Boot API!"));
+        return ResponseEntity.ok(Map.of("message", "KKKKKKK!"));
     }
 
     @GetMapping("/health")

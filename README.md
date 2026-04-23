@@ -1,6 +1,4 @@
-# Full-Stack Application
 
-Dự án này là một ứng dụng full-stack với backend Spring Boot và frontend React, được thiết kế để chạy trực tiếp trên host theo chuẩn DevOps.
 
 ## 📋 Mục Lục
 
@@ -24,9 +22,26 @@ Dự án này là một ứng dụng full-stack với backend Spring Boot và fr
 ## 📋 Yêu Cầu Tiên Quyết
 
 - **Java 17+** - Tải từ [Adoptium](https://adoptium.net/)
+  - Windows: Tải file .msi và cài đặt, thêm vào PATH
+  - Linux/Mac: Sử dụng package manager hoặc tải tar.gz và cấu hình PATH
 - **Node.js 18+** - Tải từ [Node.js](https://nodejs.org/)
+  - Windows: Tải installer .exe và cài đặt (bao gồm npm)
+  - Linux/Mac: Sử dụng nvm hoặc tải tar.xz
 - **Maven 3.9+** - Tải từ [Maven](https://maven.apache.org/) (hoặc sử dụng Maven Wrapper)
+  - Windows: Tải zip, giải nén, thêm bin vào PATH
+  - Linux/Mac: Sử dụng package manager
 - **Git** - Tải từ [Git](https://git-scm.com/)
+  - Windows: Tải installer và cài đặt
+  - Linux/Mac: Đã có sẵn hoặc cài đặt qua package manager
+
+Sau khi cài đặt, kiểm tra bằng lệnh:
+```bash
+java -version
+node -v
+npm -v
+mvn -v
+git --version
+```
 
 ## 🚀 Cài Đặt và Chạy
 
@@ -46,6 +61,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
+- Windows: `mvnw.cmd spring-boot:run`
 - Backend sẽ chạy trên: http://localhost:8080
 - API documentation: http://localhost:8080/swagger-ui.html (sau khi thêm Swagger)
 
@@ -88,6 +104,8 @@ cd backend
 ./mvnw test
 ```
 
+- Windows: `mvnw.cmd test`
+
 ### Frontend Tests
 
 ```bash
@@ -116,6 +134,7 @@ Xem chi tiết trong [SERVER_SETUP_GUIDE.md](SERVER_SETUP_GUIDE.md)
    cd backend
    ./mvnw clean package -DskipTests
    ```
+   - Windows: `mvnw.cmd clean package -DskipTests`
 
 2. **Build Frontend:**
    ```bash
@@ -183,6 +202,8 @@ cd backend
 ./mvnw clean package -DskipTests
 java -jar target/demo-0.0.1-SNAPSHOT.jar
 ```
+
+- Windows: `mvnw.cmd clean package -DskipTests` và `java -jar target\demo-0.0.1-SNAPSHOT.jar`
 
 ### Frontend
 
