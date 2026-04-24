@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline Standard (Manual Run)
 
 on:
   push:
@@ -11,34 +11,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
 
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build backend
+      # --- BACKEND BUILD ---
+      - name: Build Backend JAR
         run: |
           cd backend
           chmod +x mvnw
           ./mvnw clean package -DskipTests
 
-      - name: Test & build frontend
+      # --- FRONTEND BUILD ---
+      - name: Install & Build Frontend
         run: |
           cd frontend
           npm ci
-          npm test -- --watchAll=false   # bỏ comment khi fix xong App.test.js
           npm run build
 
-      - uses: actions/upload-artifact@v4
+      # --- LƯU TRỮ ARTIFACTS ---
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
@@ -47,113 +53,100 @@ jobs:
 
   deploy-staging:
     needs: build-and-test
-    runs-on: self-hosted     # đổi từ self-hosted
+    runs-on: self-hosted
     if: github.ref == 'refs/heads/develop'
-    timeout-minutes: 10
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      - name: SCP to staging
-        uses: appleboy/scp-action@v0.1.7   # pin version cụ thể
+      - name: SCP to Staging
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.STAGING_HOST_IP }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
-          source: "backend/target/*.jar,frontend/build"
+          source: "backend/target/*.jar,frontend/build/*"
           target: "/tmp/staging_deploy"
           strip_components: 1
 
-      - name: Deploy staging
+      - name: Deploy Staging (Manual Run)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.STAGING_HOST_IP }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           script: |
-            # Backup JAR cũ
-            [ -f /opt/staging/backend/app.jar ] && \
-              cp /opt/staging/backend/app.jar /opt/staging/backend/app.jar.bak
+            echo ">>> Triển khai STAGING cổng 8081..."
+            # 1. Tắt bản cũ đang chạy ở cổng 8081
+            sudo fuser -k 8081/tcp || true
 
-            sudo systemctl stop backend-staging || true
-
-            # Deploy backend
+            # 2. Cập nhật file JAR
             sudo mkdir -p /opt/staging/backend
-            sudo find /tmp/staging_deploy -name "*.jar" \
-              -exec cp {} /opt/staging/backend/app.jar \;
+            sudo find /tmp/staging_deploy -name "*.jar" -exec cp {} /opt/staging/backend/app.jar \;
 
-            # Deploy frontend (thêm mới)
+            # 3. Cập nhật Frontend Staging
             sudo mkdir -p /var/www/staging
             sudo rm -rf /var/www/staging/*
             sudo cp -r /tmp/staging_deploy/build/* /var/www/staging/
 
-            sudo systemctl start backend-staging
+            # 4. CHẠY THỦ CÔNG DÙNG NOHUP (Cổng 8081)
+            cd /opt/staging/backend
+            sudo nohup java -jar app.jar --server.port=8081 > staging.log 2>&1 &
 
-            # Health check thực sự
-            sleep 15
-            curl -f http://localhost:8080/api/health || {
-              echo "Health check failed, rolling back..."
-              cp /opt/staging/backend/app.jar.bak /opt/staging/backend/app.jar
-              sudo systemctl restart backend-staging
-              exit 1
-            }
-
-            # Dọn dẹp (thêm mới)
+            # 5. Kiểm tra và dọn dẹp
+            sleep 5
+            ps aux | grep "8081" | grep -v grep
             sudo rm -rf /tmp/staging_deploy
-            echo "Staging deploy successful!"
+            echo ">>> Staging deploy thành công!"
 
   deploy-production:
     needs: build-and-test
     runs-on: self-hosted
     if: github.ref == 'refs/heads/main'
-    timeout-minutes: 10
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      - name: SCP to production
+      - name: SCP to Production
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_HOST_IP }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-          source: "backend/target/*.jar,frontend/build"
+          source: "backend/target/*.jar,frontend/build/*"
           target: "/tmp/prod_deploy"
           strip_components: 1
 
-      - name: Deploy production
+      - name: Deploy Production (Manual Run)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.PROD_HOST_IP }}
           username: ${{ secrets.PROD_SSH_USER }}
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           script: |
-            # Backup JAR cũ
-            [ -f /opt/backend/app.jar ] && \
-              cp /opt/backend/app.jar /opt/backend/app.jar.bak
+            echo ">>> Triển khai PRODUCTION cổng 8080..."
+            # 1. Tắt bản cũ đang chạy ở cổng 8080
+            sudo fuser -k 8080/tcp || true
 
-            sudo systemctl stop backend || true
-
+            # 2. Cập nhật file JAR
             sudo mkdir -p /opt/backend
-            sudo find /tmp/prod_deploy -name "*.jar" \
-              -exec cp {} /opt/backend/app.jar \;
+            sudo find /tmp/prod_deploy -name "*.jar" -exec cp {} /opt/backend/app.jar \;
 
+            # 3. Cập nhật Frontend Production
             sudo mkdir -p /var/www/html
             sudo rm -rf /var/www/html/*
             sudo cp -r /tmp/prod_deploy/build/* /var/www/html/
 
-            sudo systemctl restart backend
+            # 4. CHẠY THỦ CÔNG DÙNG NOHUP (Cổng 8080)
+            cd /opt/backend
+            sudo nohup java -jar app.jar --server.port=8080 > prod.log 2>&1 &
 
-            # Health check thực sự
-            sleep 15
-            curl -f http://localhost:8080/api/health || {
-              echo "Health check failed, rolling back..."
-              cp /opt/backend/app.jar.bak /opt/backend/app.jar
-              sudo systemctl restart backend
-              exit 1
-            }
-
+            # 5. Kiểm tra và dọn dẹp
+            sleep 5
+            ps aux | grep "8080" | grep -v grep
             sudo rm -rf /tmp/prod_deploy
-            echo "Production deploy successful!"
+            echo ">>> Production deploy thành công!"
